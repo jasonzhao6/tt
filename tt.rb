@@ -24,12 +24,14 @@ class TT
   end
 
   def start
-    `say #{intro}`
-    sleep 0.4
-    `say It's time to '#{@message}.` unless @message.empty?
+    unless @message.empty?
+      `say #{intro}`
+      sleep 0.4
+      `say It's time to '#{@message}.`
+    end
     loop
   rescue SignalException => e
-    `say #{outro}`
+    `say #{outro}` unless @message.empty?
   end
 
   private

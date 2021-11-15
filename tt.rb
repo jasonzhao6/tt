@@ -14,6 +14,7 @@
 
 class TT
   DEBUG = false
+  VOLUME = 0.5 # Multiplier
   MINUTE = DEBUG ? 2 : 60 # Seconds.
   INTERVAL = DEBUG ? 2 : 5 * MINUTE
   OUTRO_THTRESHOLD = DEBUG ? 3 * MINUTE : 15 * MINUTE
@@ -25,22 +26,26 @@ class TT
 
   def start
     unless @message.empty?
-      `say #{intro}`
+      say(intro)
       sleep 0.4
-      `say It's time to '#{@message}.`
+      say("It's time to '#{@message}.")
     end
     loop
   rescue SignalException => e
-    `say #{outro}` unless @message.empty?
+    say(outro) unless @message.empty?
   end
 
   private
+
+  def say(message)
+    `say [[volm #{VOLUME}]] #{message}`
+  end
 
   def loop
     sleep INTERVAL
     @timer += INTERVAL
     puts status = "#{time_with_unit(@timer)} in."
-    `say #{status}`
+    say(status)
     loop
   end
 

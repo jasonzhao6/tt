@@ -1,23 +1,25 @@
 #!/usr/bin/env ruby
 #
 # Tomato Timer (TT)
+# -----------------
 # A ruby script that announces 'X minutes in.' every 5 minutes.
-# I use it as a subtle reminder to focus and be aware of time passing.
-# This was inspired by and a poor man's version of https://www.centered.app/.
+# I use it as a reminder to focus and be aware of time passing.
+# This was inspired by the paid app https://www.centered.app/.
+#
+# In addition to being a timer, it can also be used as an alarm.
 #
 # HOW TO:
-# In a terminal, run `[/path/to]/tt.rb [do this one thing]`.
-# When you are done, exit with `ctrl + c`.
-# - or -
 # In `.bash_profile`, add `alias tt='[/path/to]/tt.rb'`.
-# Then in a terminal, run `tt [do this one thing]`.
+# Then in a terminal, run `tt [do this one thing]` to start timer.
+# Or run `tt [a number in minutes]` to start alarm countdown.
+#
 
 class TT
   DEBUG = false
-  VOLUME = 0.5 # Multiplier
-  MINUTE = DEBUG ? 2 : 60 # Seconds.
-  INTERVAL = DEBUG ? 2 : 5 * MINUTE
-  OUTRO_THTRESHOLD = DEBUG ? 3 * MINUTE : 15 * MINUTE
+  VOLUME = 0.7 # Between 0.0 - 1.0
+  MINUTE = DEBUG ? 2 : 60 # Seconds
+  INTERVAL = (DEBUG ? 1 : 5) * MINUTE
+  OUTRO_THTRESHOLD = (DEBUG ? 3 : 15) * MINUTE
 
   def initialize(message)
     @message = message
@@ -25,27 +27,46 @@ class TT
   end
 
   def start
-    unless @message.empty?
-      say(intro)
-      sleep 0.4
-      say("It's time to '#{@message}.")
+    # If the argument is a number, behave as an alarm, with unit in minutes
+    begin
+      alarm_in_minutes = @message.to_i
+      if alarm_in_minutes.to_s == @message
+        say("Setting alarm for #{time_with_unit(alarm_in_minutes * MINUTE)}.")
+        sleep alarm_in_minutes * MINUTE
+        say("#{time_with_unit(alarm_in_minutes * MINUTE)} passed.", volume: 1)
+        exit
+      end
+    rescue SignalException => e
+      exit
     end
-    loop
-  rescue SignalException => e
-    say(outro) unless @message.empty?
+
+    # Otherwise, behave as a tomato timer
+    begin
+      unless @message.empty?
+        say(intro)
+        sleep 0.4
+        say("It's time to '#{@message}.")
+      end
+
+      loop
+    rescue SignalException => e
+      say(outro) unless @message.empty?
+    end
   end
 
   private
 
-  def say(message)
-    `say [[volm #{VOLUME}]] #{message}`
+  def say(message, volume: VOLUME)
+    `say [[volm #{volume}]] #{message}`
   end
 
   def loop
     sleep INTERVAL
+
     @timer += INTERVAL
     puts status = "#{time_with_unit(@timer)} in."
     say(status)
+
     loop
   end
 

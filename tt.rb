@@ -27,16 +27,23 @@ class TT
   end
 
   def start
-    # If the argument is a number, behave as an alarm, with unit in minutes
+    # If the argument is a number, treat it as minutes and behave as an alarm
     begin
       alarm_in_minutes = @message.to_i
       if alarm_in_minutes.to_s == @message
         say("Setting alarm for #{time_with_unit(alarm_in_minutes * MINUTE)}.")
+        start_time = Time.now
         sleep alarm_in_minutes * MINUTE
+
         say("#{time_with_unit(alarm_in_minutes * MINUTE)} passed.", volume: 1)
         exit
       end
     rescue SignalException => e
+      if start_time
+        time_passed = (Time.now - start_time).round
+        say("#{time_with_unit(time_passed)} passed.", volume: 1)
+      end
+
       exit
     end
 
@@ -75,7 +82,7 @@ class TT
       minutes = seconds / MINUTE
       "#{minutes} minute#{minutes > 1 ? 's' : ''}"
     else
-      "#{@timer} seconds"
+      "#{seconds} second#{seconds > 1 ? 's' : ''}"
     end
   end
 
